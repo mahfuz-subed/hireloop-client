@@ -18,8 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Job } from "@/app/dashboard/recruiter/jobs/new/page" // change if you moved it
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+import { getJobs } from "@/lib/api/jobs"
 
 // the API also returns _id, which we need for the row key
 type JobRow = Job & { _id: string }
@@ -49,12 +48,6 @@ const formatDate = (date: string) =>
         timeZone: "UTC",
       })
     : "—"
-
-async function getJobs(): Promise<JobRow[]> {
-  const res = await fetch(`${BASE_URL}/jobs`, { cache: "no-store" })
-  if (!res.ok) throw new Error(`Failed to load jobs (${res.status})`)
-  return res.json()
-}
 
 const ManageJobsPage = async () => {
   const jobs = await getJobs()
