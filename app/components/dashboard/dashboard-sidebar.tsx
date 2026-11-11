@@ -1,11 +1,13 @@
 "use client"
 
+import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -13,8 +15,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useSession } from "@/lib/auth-client"
-import type { LucideIcon } from "lucide-react"
+import type { MenuItemsByRole } from "@/types/dashboard"
 import {
   Bookmark,
   Briefcase,
@@ -27,13 +30,7 @@ import {
   Users,
 } from "lucide-react"
 
-type MenuItem = {
-  name: string
-  url: string
-  icon: LucideIcon
-}
-
-const menuItemsByRole: Record<"seeker" | "recruiter" | "admin", MenuItem[]> = {
+const menuItemsByRole: MenuItemsByRole = {
   seeker: [
     { name: "Dashboard", url: "/dashboard/seeker", icon: LayoutDashboard },
     { name: "Jobs", url: "/dashboard/seeker/jobs", icon: Briefcase },
@@ -74,26 +71,66 @@ const menuItemsByRole: Record<"seeker" | "recruiter" | "admin", MenuItem[]> = {
 }
 
 export function DashbaordSidebar() {
+  const pathname = usePathname()
   const { data: session, isPending } = useSession()
   const role = session?.user?.role || "seeker"
+  const items = menuItemsByRole[role]
+
+  // Longest matching URL wins so nested routes light up only their own item
+  // (e.g. /jobs/new highlights "Add Jobs", not "Manage Jobs").
+  const activeUrl = items
+    .map((item) => item.url)
+    .filter((url) => pathname === url || pathname.startsWith(`${url}/`))
+    .sort((a, b) => b.length - a.length)[0]
+
   return (
     <Sidebar>
-      <SidebarHeader />
+      <SidebarHeader className="border-b border-sidebar-border/60">
+        <Link
+          href="/"
+          aria-label="HireLoop home"
+          className="flex h-12 items-center px-1"
+        >
+          <Image
+            src="/logo.png"
+            alt="HireLoop"
+            width={132}
+            height={36}
+            priority
+          />
+        </Link>
+      </SidebarHeader>
+
       <SidebarContent>
-        <SidebarGroup />
-        <SidebarMenu>
-          {menuItemsByRole[role].map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton render={<a href={item.url} />}>
-                <item.icon />
-                <span>{item.name}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-        <SidebarGroup />
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {isPending
+                ? Array.from({ length: 5 }).map((_, index) => (
+                    <SidebarMenuItem key={index}>
+                      <div className="flex h-8 items-center gap-2 rounded-md px-2">
+                        <Skeleton className="size-4 rounded-md" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </SidebarMenuItem>
+                  ))
+                : items.map((item) => (
+                    <SidebarMenuItem key={item.name}>
+                      <SidebarMenuButton
+                        isActive={activeUrl === item.url}
+                        tooltip={item.name}
+                        render={<Link href={item.url} />}
+                      >
+                        <item.icon />
+                        <span>{item.name}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
     </Sidebar>
   )
 }

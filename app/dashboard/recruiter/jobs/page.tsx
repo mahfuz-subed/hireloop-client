@@ -1,14 +1,6 @@
 import Link from "next/link"
-import {
-  Code2,
-  Globe,
-  MapPin,
-  Pencil,
-  Trash2,
-  MoreVertical,
-  Plus,
-  Users,
-} from "lucide-react"
+import { Code2, Globe, MapPin, Plus, Users } from "lucide-react"
+
 import {
   Table,
   TableBody,
@@ -17,198 +9,185 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Job } from "@/app/dashboard/recruiter/jobs/new/page" // change if you moved it
+import { Button } from "@/components/ui/button"
 import { getJobs } from "@/lib/api/jobs"
+import { formatCompensation, formatDate, timeAgo } from "@/lib/jobs-format"
+import { DeleteJobs } from "@/app/components/dashboard/deleteJobs"
+import { UpdateJobs } from "@/app/components/dashboard/updateJobs"
+import { JobCard } from "@/app/components/dashboard/job-card"
+import { JobStatusBadge } from "@/app/components/dashboard/status-badge"
+import { PageHeader, PageShell } from "@/app/components/dashboard/page-shell"
 
-// the API also returns _id, which we need for the row key
-type JobRow = Job & { _id: string }
-
-const FREQ: Record<string, string> = {
-  "per hour": "hr",
-  "per month": "mo",
-  "per year": "yr",
-}
-
-const money = (value: string) => {
-  const n = Number(value)
-  return n >= 1000 ? `€${n / 1000}k` : `€${n}`
-}
-
-const compensation = (job: JobRow) => {
-  if (!job.minSalary && !job.maxSalary) return "—"
-  return `${money(job.minSalary)} – ${money(job.maxSalary)} / ${FREQ[job.frequency] ?? job.frequency}`
-}
-
-const formatDate = (date: string) =>
-  date
-    ? new Date(date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        timeZone: "UTC",
-      })
-    : "—"
+const headClass =
+  "h-11 text-[10px] font-medium tracking-wider text-zinc-500 uppercase"
 
 const ManageJobsPage = async () => {
   const jobs = await getJobs()
 
   return (
-    <div className="mx-auto max-w-6xl p-8 text-zinc-100">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <p className="mb-2 text-[11px] text-zinc-500">
+    <PageShell>
+      <PageHeader
+        breadcrumb={
+          <>
             Manage Jobs /{" "}
-            <span className="text-indigo-400">Job Listings &amp; Postings</span>
-          </p>
-          <h1 className="text-2xl font-bold">Manage Job Posts</h1>
-          <p className="mt-1 text-xs text-zinc-500">
-            Review live listings, monitor applicants, and update job details
-            across your organization.
-          </p>
+            <span className="text-brand">Job Listings &amp; Postings</span>
+          </>
+        }
+        title="Manage Job Posts"
+        description="Review live listings, monitor applicants, and update job details across your organization."
+        action={
+          <Button
+            render={<Link href="/dashboard/recruiter/jobs/new" />}
+            nativeButton={false}
+            variant="brand"
+            size="lg"
+            className="w-full gap-1.5 sm:w-auto"
+          >
+            <Plus size={14} />
+            New Job Post
+          </Button>
+        }
+      />
+
+      {jobs.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-zinc-800 p-10 text-center text-sm text-zinc-500">
+          No jobs posted yet.
         </div>
-        <Link
-          href="/dashboard/recruiter/jobs/new"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-indigo-500 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-400"
-        >
-          <Plus size={14} />
-          New Job Post
-        </Link>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-[#111113]">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
-              {[
-                "Job Title & Dept",
-                "Company & Location",
-                "Type",
-                "Compensation",
-                "Applicants",
-                "Status",
-                "Deadline",
-              ].map((h) => (
-                <TableHead
-                  key={h}
-                  className="h-11 text-[10px] font-medium tracking-wider text-zinc-500 uppercase"
-                >
-                  {h}
-                </TableHead>
-              ))}
-              <TableHead className="h-11 text-right text-[10px] font-medium tracking-wider text-zinc-500 uppercase">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {jobs.length === 0 && (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={8}
-                  className="py-10 text-center text-sm text-zinc-500"
-                >
-                  No jobs posted yet.
-                </TableCell>
-              </TableRow>
-            )}
-
-            {jobs.map((job) => {
-              const remote = job.isRemote === "true"
-              return (
-                <TableRow
-                  key={job._id}
-                  className="border-zinc-800/60 hover:bg-white/[0.02]"
-                >
-                  {/* Title & category */}
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a1d] text-indigo-400">
-                        <Code2 size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold">{job.title}</p>
-                        <p className="text-[11px] text-sky-400">
-                          {job.category}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* Company & location */}
-                  <TableCell>
-                    <p className="text-xs font-medium">{job.companyName}</p>
-                    <p className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-500">
-                      {remote ? <Globe size={12} /> : <MapPin size={12} />}
-                      {remote ? `Remote (${job.location})` : job.location}
-                    </p>
-                  </TableCell>
-
-                  {/* Type */}
-                  <TableCell>
-                    <span className="rounded-full bg-[#1a1a1d] px-2.5 py-1 text-[10px] text-zinc-300">
-                      {job.jobType}
-                    </span>
-                  </TableCell>
-
-                  {/* Compensation */}
-                  <TableCell className="text-xs">{compensation(job)}</TableCell>
-
-                  {/* Applicants (static for now) */}
-                  <TableCell>
-                    <span className="flex items-center gap-1.5 text-xs text-indigo-300">
-                      <Users size={14} />0 Candidates
-                    </span>
-                  </TableCell>
-
-                  {/* Status (static for now) */}
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      Active
-                    </span>
-                  </TableCell>
-
-                  {/* Deadline */}
-                  <TableCell className="text-xs text-zinc-300">
-                    {formatDate(job.deadline)}
-                  </TableCell>
-
-                  {/* Actions (static) */}
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-md bg-indigo-500/15 px-3 py-1.5 text-[11px] text-indigo-300 hover:bg-indigo-500/25"
-                      >
-                        <Pencil size={12} />
-                        Update
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Delete job"
-                        className="rounded-md bg-[#1a1a1d] p-1.5 text-zinc-400 hover:text-zinc-200"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="More actions"
-                        className="rounded-md p-1.5 text-zinc-500 hover:text-zinc-300"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                    </div>
-                  </TableCell>
+      ) : (
+        <>
+          {/* Desktop / tablet table */}
+          <div className="hidden overflow-hidden rounded-xl border border-zinc-800 bg-surface md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-zinc-800 hover:bg-transparent">
+                  <TableHead className={headClass}>Job Title &amp; Dept</TableHead>
+                  <TableHead className={headClass}>
+                    Company &amp; Location
+                  </TableHead>
+                  <TableHead className={`${headClass} hidden xl:table-cell`}>
+                    Type
+                  </TableHead>
+                  <TableHead className={`${headClass} hidden xl:table-cell`}>
+                    Compensation
+                  </TableHead>
+                  <TableHead className={`${headClass} hidden xl:table-cell`}>
+                    Applicants
+                  </TableHead>
+                  <TableHead className={headClass}>Status</TableHead>
+                  <TableHead className={`${headClass} hidden xl:table-cell`}>
+                    Deadline
+                  </TableHead>
+                  <TableHead className={`${headClass} text-right`}>
+                    Actions
+                  </TableHead>
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+              </TableHeader>
+
+              <TableBody>
+                {jobs.map((job) => {
+                  const remote = job.isRemote === "true"
+                  const applicants = job.applicants ?? 0
+
+                  return (
+                    <TableRow
+                      key={job._id}
+                      className="border-zinc-800/60 hover:bg-white/[0.02]"
+                    >
+                      {/* Title & category */}
+                      <TableCell>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-brand">
+                            <Code2 size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="max-w-[150px] truncate text-xs font-semibold xl:max-w-none">
+                              {job.title}
+                            </p>
+                            <p className="max-w-[150px] truncate text-[11px] text-sky-400 xl:max-w-none">
+                              {job.category}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+
+                      {/* Company & location */}
+                      <TableCell>
+                        <p className="max-w-[140px] truncate text-xs font-medium xl:max-w-none">
+                          {job.companyName}
+                        </p>
+                        <p className="mt-0.5 flex max-w-[140px] items-center gap-1 text-[11px] text-zinc-500 xl:max-w-none">
+                          {remote ? (
+                            <Globe size={12} className="shrink-0" />
+                          ) : (
+                            <MapPin size={12} className="shrink-0" />
+                          )}
+                          <span className="truncate">
+                            {remote
+                              ? `Remote (${job.location})`
+                              : job.location}
+                          </span>
+                        </p>
+                      </TableCell>
+
+                      {/* Type */}
+                      <TableCell className="hidden xl:table-cell">
+                        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] text-zinc-300">
+                          {job.jobType}
+                        </span>
+                      </TableCell>
+
+                      {/* Compensation */}
+                      <TableCell className="hidden text-xs xl:table-cell">
+                        {formatCompensation(job)}
+                      </TableCell>
+
+                      {/* Applicants */}
+                      <TableCell className="hidden xl:table-cell">
+                        <span className="flex items-center gap-1.5 text-xs text-indigo-300">
+                          <Users size={14} />
+                          {applicants}{" "}
+                          {applicants === 1 ? "Candidate" : "Candidates"}
+                        </span>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <JobStatusBadge status={job.status} />
+                      </TableCell>
+
+                      {/* Deadline */}
+                      <TableCell className="hidden text-xs text-zinc-300 xl:table-cell">
+                        {formatDate(job.deadline)}
+                        {job.posted && (
+                          <p className="mt-0.5 text-[10px] text-zinc-500">
+                            {timeAgo(job.posted)}
+                          </p>
+                        )}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <UpdateJobs job={job} />
+                          <DeleteJobs job={job} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="space-y-3 md:hidden">
+            {jobs.map((job) => (
+              <JobCard key={job._id} job={job} />
+            ))}
+          </div>
+        </>
+      )}
+    </PageShell>
   )
 }
 

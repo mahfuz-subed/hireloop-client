@@ -5,20 +5,10 @@ import Link from "next/link"
 import { Eye, EyeOff, Lock, Mail, Shield, User, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import type { AuthFormData, AuthMode, UserRole } from "@/types/auth"
 
-export type AuthMode = "signin" | "signup"
-
-// TODO: Replace this with better-auth (`@/lib/auth-client`) once the backend
-// integration is wired up. For now it only reports the collected data.
-// Roles mirror the `user.additionalFields.role` enum in `lib/auth.ts`.
-export type UserRole = "seeker" | "recruiter" | "admin"
-
-export type AuthFormData = {
-  email: string
-  password: string
-  name?: string
-  role?: UserRole
-}
+// Re-exported so existing imports from "@/components/auth-form" keep working.
+export type { AuthFormData, AuthMode, UserRole }
 
 const COPY = {
   signin: {

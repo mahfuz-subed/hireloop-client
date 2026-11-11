@@ -1,8 +1,8 @@
-import { Job } from "@/app/dashboard/recruiter/jobs/new/page"
+import type { JobInput } from "@/types/job"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
-export const createJob = async (data: Job) => {
+export const createJob = async (data: JobInput) => {
   const res = await fetch(`${BASE_URL}/jobs`, {
     method: "POST",
     headers: {
@@ -10,6 +10,21 @@ export const createJob = async (data: Job) => {
     },
     body: JSON.stringify(data),
   })
-  const jobsData = await res.json()
-  console.log(jobsData)
+  return res.json()
 }
+
+export const deleteJob = async (jobId: string) => {
+  const res = await fetch(`${BASE_URL}/jobs/${jobId}`, {
+    method: "DELETE",
+  })
+  return res.json()
+}
+
+// export const updateJobs = async(updatedData:Job)=>{
+//   const res = await fetch(`${BASE_URL}/jobs/${updatedData._id}`,{
+//     method: "PATCH",
+//     headers: {"Content-Type": "application/json"},
+//     body: JSON.stringify(updatedData)
+
+//   })
+// }
