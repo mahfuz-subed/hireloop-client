@@ -12,15 +12,27 @@ const money = (value: string) => {
   return n >= 1000 ? `€${n / 1000}k` : `€${n}`
 }
 
+const moneyRange = (min: string, max: string) =>
+  [min, max]
+    .filter(Boolean)
+    .map(money)
+    .join(" – ")
+
+/** `€140k – €180k`, without the pay frequency. */
+export const formatSalaryRange = (
+  job: Pick<JobRow, "minSalary" | "maxSalary">
+) => {
+  if (!job.minSalary && !job.maxSalary) return "—"
+  return moneyRange(job.minSalary, job.maxSalary)
+}
+
 export const formatCompensation = (
   job: Pick<JobRow, "minSalary" | "maxSalary" | "frequency">
 ) => {
   if (!job.minSalary && !job.maxSalary) return "—"
-  const range = [job.minSalary, job.maxSalary]
-    .filter(Boolean)
-    .map(money)
-    .join(" – ")
-  return `${range} / ${FREQUENCY_LABEL[job.frequency] ?? job.frequency}`
+  return `${moneyRange(job.minSalary, job.maxSalary)} / ${
+    FREQUENCY_LABEL[job.frequency] ?? job.frequency
+  }`
 }
 
 export const formatDate = (date: string) => {

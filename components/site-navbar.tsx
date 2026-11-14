@@ -18,7 +18,7 @@ export function SiteNavbar() {
   const [open, setOpen] = React.useState(false)
   const { data: session } = useSession()
   const NAV_LINKS = [
-    { label: "Browse Jobs", href: "/jobs" },
+    { label: "Browse Jobs", href: "/browse-jobs" },
     { label: "Company", href: "/company" },
     { label: "Pricing", href: "/pricing" },
     {
@@ -54,7 +54,6 @@ export function SiteNavbar() {
             width={160}
             height={44}
             priority
-            className="h-11 w-auto"
           />
         </Link>
 
