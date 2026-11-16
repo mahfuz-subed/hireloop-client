@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { SiteNavbar } from "@/components/site-navbar"
+import { Toaster } from "@/components/ui/toast"
 import { JobDetailsView } from "@/app/components/jobs/job-details-view"
 import { getJob, getJobs } from "@/lib/api/jobs"
 import { formatCompensation, formatDate } from "@/lib/jobs-format"
@@ -153,6 +154,9 @@ const JobDetailsPage = async ({ params }: JobDetailsPageProps) => {
           </aside>
         </div>
       </main>
+
+      {/* Lets the Apply button show success / error messages. */}
+      <Toaster />
     </div>
   )
 }

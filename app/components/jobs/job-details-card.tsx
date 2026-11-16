@@ -15,6 +15,8 @@ type JobDetailsCardProps = {
   onSave?: (job: JobRow) => void
   /** Called when "Apply Now" is clicked. */
   onApply?: (job: JobRow) => void
+  /** `true` while the application is being saved, to disable the button. */
+  isApplying?: boolean
 }
 
 /**
@@ -29,6 +31,7 @@ export function JobDetailsCard({
   saved = false,
   onSave,
   onApply,
+  isApplying = false,
 }: JobDetailsCardProps) {
   const remote = job.isRemote === "true"
   const location = remote ? `${job.location} (Remote)` : job.location
@@ -76,9 +79,10 @@ export function JobDetailsCard({
           <button
             type="button"
             onClick={() => onApply?.(job)}
-            className="h-9 rounded-md bg-white px-4 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
+            disabled={isApplying}
+            className="h-9 rounded-md bg-white px-4 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Apply Now
+            {isApplying ? "Applying..." : "Apply Now"}
           </button>
         </div>
       </div>
