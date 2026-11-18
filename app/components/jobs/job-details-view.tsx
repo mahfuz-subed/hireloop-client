@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/toast"
 import { applyToAJob, getApplicationsCount } from "@/lib/actions/application"
 import { useSession } from "@/lib/auth-client"
 import type { JobRow } from "@/types/job"
+import { getUserPremiumById } from "@/lib/api/users"
 
 /**
  * Holds the interactive parts of the job details page.
@@ -52,9 +53,12 @@ export function JobDetailsView({ job }: { job: JobRow }) {
 
     if (user.role === "seeker") {
       //number of jobs applied
+      const premiumResult = await getUserPremiumById(user.id)
+      console.log(premiumResult, "premiumResult")
       const countResult = await getApplicationsCount(`seekerId=${user.id}`)
-      if (countResult.count >= 10) {
+      if (!premiumResult.premium && countResult.count >= 2) {
         //redirect to payment
+        setIsApplying(false)
         router.push("/payments")
         return
       }

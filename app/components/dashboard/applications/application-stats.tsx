@@ -21,7 +21,8 @@ export function ApplicationStats({ stats }: ApplicationStatsProps) {
   )
 }
 
-function StatCard({
+/** Exported so other screens (e.g. recruiter applicants) reuse the same card. */
+export function StatCard({
   label,
   value,
   highlight,

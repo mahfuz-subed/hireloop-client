@@ -1,8 +1,4 @@
-import type {
-  Application,
-  ApplicationInput,
-  ApplicationStatus,
-} from "@/types/application"
+import type { Application, ApplicationInput } from "@/types/application"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
@@ -33,33 +29,20 @@ export const applyToAJob = async (
   return data as Application
 }
 
-export type ApplicationQuery = {
-  seekerId?: string
-  jobId?: string
-  status?: ApplicationStatus
-  archived?: boolean
-}
-
-/** Loads applications for the "My Applications" page, newest first. */
-export const getApplications = async (
-  query: ApplicationQuery = {}
-): Promise<Application[]> => {
-  const params = new URLSearchParams()
-
-  if (query.seekerId) params.set("seekerId", query.seekerId)
-  if (query.jobId) params.set("jobId", query.jobId)
-  if (query.status) params.set("status", query.status)
-  if (query.archived !== undefined) {
-    params.set("archived", String(query.archived))
-  }
-
-  const res = await fetch(`${BASE_URL}/applications?${params}`, {
+/**
+ * Loads applications for the "My Applications" page, newest first.
+ *
+ * The query is a plain string, just like `getApplicationsCount`:
+ *
+ *   getApplications(`seekerId=${user.id}`)
+ *   getApplications(`seekerId=${user.id}&archived=false`)
+ *   getApplications()  // every application
+ */
+export const getApplications = async (query = ""): Promise<Application[]> => {
+  const res = await fetch(`${BASE_URL}/applications?${query}`, {
     cache: "no-store",
   })
-
-  if (!res.ok) return []
-
-  return (await res.json()) as Application[]
+  return res.json()
 }
 
 export const getApplicationsCount = async (
@@ -67,4 +50,18 @@ export const getApplicationsCount = async (
 ): Promise<{ count: number }> => {
   const res = await fetch(`${BASE_URL}/applications/count?${query}`)
   return res.json()
+}
+
+export const updateApplicationStatus = async (
+  id: string,
+  data: { status: string }
+) => {
+  const response = await fetch(`${BASE_URL}/applications${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+  return response.json()
 }

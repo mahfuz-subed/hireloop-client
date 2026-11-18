@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { Code2, Globe, MapPin, Plus, Users } from "lucide-react"
 
 import {
@@ -14,15 +15,24 @@ import { getJobs } from "@/lib/api/jobs"
 import { formatCompensation, formatDate, timeAgo } from "@/lib/jobs-format"
 import { DeleteJobs } from "@/app/components/dashboard/deleteJobs"
 import { UpdateJobs } from "@/app/components/dashboard/updateJobs"
+import { ApplicationsLink } from "@/app/components/dashboard/applications-link"
 import { JobCard } from "@/app/components/dashboard/job-card"
 import { JobStatusBadge } from "@/app/components/dashboard/status-badge"
 import { PageHeader, PageShell } from "@/app/components/dashboard/page-shell"
+import { getSession } from "@/lib/core/server"
 
 const headClass =
   "h-11 text-[10px] font-medium tracking-wider text-zinc-500 uppercase"
 
 const ManageJobsPage = async () => {
-  const jobs = await getJobs()
+  const session = await getSession()
+
+  // No session -> `recruiterId=undefined` would match nothing. Bounce instead.
+  if (!session) redirect("/sign-in?redirectTo=/dashboard/recruiter/jobs")
+  // There is no /dashboard index page, so send non-recruiters home.
+  if (session.user.role !== "recruiter") redirect("/")
+
+  const jobs = await getJobs(`recruiterId=${session.user.id}`)
 
   return (
     <PageShell>
@@ -60,7 +70,9 @@ const ManageJobsPage = async () => {
             <Table>
               <TableHeader>
                 <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className={headClass}>Job Title &amp; Dept</TableHead>
+                  <TableHead className={headClass}>
+                    Job Title &amp; Dept
+                  </TableHead>
                   <TableHead className={headClass}>
                     Company &amp; Location
                   </TableHead>
@@ -122,9 +134,7 @@ const ManageJobsPage = async () => {
                             <MapPin size={12} className="shrink-0" />
                           )}
                           <span className="truncate">
-                            {remote
-                              ? `Remote (${job.location})`
-                              : job.location}
+                            {remote ? `Remote (${job.location})` : job.location}
                           </span>
                         </p>
                       </TableCell>
@@ -168,6 +178,7 @@ const ManageJobsPage = async () => {
                       {/* Actions */}
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
+                          <ApplicationsLink jobId={job._id} />
                           <UpdateJobs job={job} />
                           <DeleteJobs job={job} />
                         </div>

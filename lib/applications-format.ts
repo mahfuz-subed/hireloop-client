@@ -62,6 +62,24 @@ export const formatAppliedAgo = (date: string) => {
   return `${months} month${months === 1 ? "" : "s"} ago`
 }
 
+/**
+ * Pipeline numbers for a recruiter's applicants screen.
+ *
+ * `getApplicationStats` below is seeker-facing: it asks "how am I doing?".
+ * This one is recruiter-facing: it asks "where is my pipeline?".
+ */
+export const getJobApplicationStats = (applications: Application[]) => {
+  const countByStatus = (status: ApplicationStatus) =>
+    applications.filter((application) => application.status === status).length
+
+  return {
+    total: applications.length,
+    inReview: countByStatus("review"),
+    shortlisted: countByStatus("shortlisted"),
+    interviews: countByStatus("interview"),
+  }
+}
+
 /** The four numbers in the cards at the top of "My Applications". */
 export const getApplicationStats = (applications: Application[]) => {
   const total = applications.length

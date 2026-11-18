@@ -1,6 +1,7 @@
 import { Code2, Globe, MapPin, Users } from "lucide-react"
 
 import { DeleteJobs } from "@/app/components/dashboard/deleteJobs"
+import { ApplicationsLink } from "@/app/components/dashboard/applications-link"
 import { JobStatusBadge } from "@/app/components/dashboard/status-badge"
 import { UpdateJobs } from "@/app/components/dashboard/updateJobs"
 import { formatCompensation, formatDate, timeAgo } from "@/lib/jobs-format"
@@ -66,6 +67,7 @@ export function JobCard({ job }: { job: JobRow }) {
       </dl>
 
       <div className="mt-4 flex items-center justify-end gap-2 border-t border-zinc-800/60 pt-3">
+        <ApplicationsLink jobId={job._id} withLabel />
         <UpdateJobs job={job} />
         <DeleteJobs job={job} />
       </div>

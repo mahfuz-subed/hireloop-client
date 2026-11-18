@@ -1,14 +1,22 @@
+"use server"
 import type { JobInput } from "@/types/job"
+
+import { auth } from "../auth"
+import { headers } from "next/headers"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
 export const createJob = async (data: JobInput) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
   const res = await fetch(`${BASE_URL}/jobs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, recruiterId: session?.user.id }),
   })
   return res.json()
 }

@@ -39,6 +39,7 @@ export type RemoteFlag = "true" | "false"
 export type Job = {
   _id: string
   title: string
+  recruiterId: string
   companyName: string
   category: string
   jobType: string
@@ -53,12 +54,13 @@ export type Job = {
 }
 
 /** Everything the create form sends. The server assigns `_id`. */
-export type JobInput = Omit<Job, "_id">
+export type JobInput = Omit<Job, "_id" | "recruiterId">
 
 /** A job as rendered in the recruiter "Manage Jobs" table. */
 export type JobRow = {
   _id: string
   title: string
+  recruiterId: string
   companyName: string
   category: string
   jobType: string
