@@ -92,9 +92,15 @@ export function SiteNavbar() {
           <div className="flex items-center gap-4">
             {session?.user ? (
               <>
-                <span className="max-w-[12rem] truncate text-[#EDEDEF]">
-                  Welcome, {session.user.name}!
-                </span>
+                <div className="flex items-center gap-2">
+                  <NavbarAvatar
+                    image={session.user.image}
+                    name={session.user.name}
+                  />
+                  <span className="max-w-[12rem] truncate text-[#EDEDEF]">
+                    Welcome, {session.user.name}!
+                  </span>
+                </div>
                 <Button
                   onClick={handleSignOut}
 
@@ -176,9 +182,15 @@ export function SiteNavbar() {
           <div className="flex flex-col gap-2">
             {session?.user ? (
               <>
-                <span className="px-1 pb-1 text-sm text-[#EDEDEF]/80">
-                  Welcome, {session.user.name}!
-                </span>
+                <div className="flex items-center gap-2 px-1 pb-1">
+                  <NavbarAvatar
+                    image={session.user.image}
+                    name={session.user.name}
+                  />
+                  <span className="text-sm text-[#EDEDEF]/80">
+                    Welcome, {session.user.name}!
+                  </span>
+                </div>
                 <Button
                   onClick={async () => {
                     setOpen(false)
@@ -215,5 +227,28 @@ export function SiteNavbar() {
         </div>
       ) : null}
     </header>
+  )
+}
+
+/**
+ * The signed-in user's picture, or a placeholder when they have none.
+ *
+ * A plain <img> is used because the URL comes from the auth provider (often a
+ * remote host) and this app has no `images.remotePatterns` configured.
+ */
+function NavbarAvatar({
+  image,
+  name,
+}: {
+  image?: string | null
+  name: string
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={image || "/avatar-placeholder.svg"}
+      alt={image ? `${name}'s profile photo` : "Default profile photo"}
+      className="size-9 shrink-0 rounded-full border border-white/10 object-cover"
+    />
   )
 }

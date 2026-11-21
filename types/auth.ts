@@ -10,4 +10,6 @@ export type AuthFormData = {
   password: string
   name?: string
   role?: UserRole
+  /** Public URL of the profile photo, returned by `/api/upload`. */
+  image?: string
 }

@@ -16,14 +16,17 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { UserRoleBadge } from "@/app/components/dashboard/admin/user-role-badge"
 import { useSession } from "@/lib/auth-client"
-import type { MenuItemsByRole } from "@/types/dashboard"
+import { normalizeRole } from "@/lib/users-format"
+import type { MenuItem, MenuItemsByRole } from "@/types/dashboard"
 import {
   Bookmark,
   Briefcase,
   Building2,
   CreditCard,
   FileText,
+  Home,
   LayoutDashboard,
   PlusCircle,
   Settings,
@@ -70,11 +73,14 @@ const menuItemsByRole: MenuItemsByRole = {
   ],
 }
 
+/** Shown above the role-specific menu for every dashboard. */
+const HOME_ITEM: MenuItem = { name: "Home", url: "/", icon: Home }
+
 export function DashbaordSidebar() {
   const pathname = usePathname()
   const { data: session, isPending } = useSession()
   const role = session?.user?.role || "seeker"
-  const items = menuItemsByRole[role]
+  const items = [HOME_ITEM, ...menuItemsByRole[role]]
 
   // Longest matching URL wins so nested routes light up only their own item
   // (e.g. /jobs/new highlights "Add Jobs", not "Manage Jobs").
@@ -99,6 +105,23 @@ export function DashbaordSidebar() {
             priority
           />
         </Link>
+
+        {isPending ? (
+          <div className="flex flex-col gap-2 px-1 pb-1">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+        ) : session?.user ? (
+          <div className="flex flex-col gap-1.5 px-1 pb-1">
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">
+              {session.user.name}
+            </p>
+            <UserRoleBadge
+              role={normalizeRole(session.user.role)}
+              className="self-start"
+            />
+          </div>
+        ) : null}
       </SidebarHeader>
 
       <SidebarContent>

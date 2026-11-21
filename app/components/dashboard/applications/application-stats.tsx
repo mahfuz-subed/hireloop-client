@@ -21,15 +21,27 @@ export function ApplicationStats({ stats }: ApplicationStatsProps) {
   )
 }
 
+/** Colours for the small caption under a stat value. */
+const HINT_TONES = {
+  positive: "text-emerald-400",
+  warning: "text-amber-400",
+  muted: "text-zinc-500",
+}
+
 /** Exported so other screens (e.g. recruiter applicants) reuse the same card. */
 export function StatCard({
   label,
   value,
   highlight,
+  hint,
+  hintTone = "muted",
 }: {
   label: string
   value: number | string
   highlight?: boolean
+  /** Optional caption under the number, e.g. "12% of all users". */
+  hint?: string
+  hintTone?: keyof typeof HINT_TONES
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-surface p-4">
@@ -42,6 +54,9 @@ export function StatCard({
       >
         {value}
       </p>
+      {hint ? (
+        <p className={cn("mt-1 text-[11px]", HINT_TONES[hintTone])}>{hint}</p>
+      ) : null}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import type { Application, ApplicationInput } from "@/types/application"
+import { authFetch } from "../core/server"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
@@ -39,9 +40,8 @@ export const applyToAJob = async (
  *   getApplications()  // every application
  */
 export const getApplications = async (query = ""): Promise<Application[]> => {
-  const res = await fetch(`${BASE_URL}/applications?${query}`, {
-    cache: "no-store",
-  })
+  const api = `${BASE_URL}/applications?${query}`
+  const res = await authFetch(api)
   return res.json()
 }
 

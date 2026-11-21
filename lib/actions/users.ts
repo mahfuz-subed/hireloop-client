@@ -13,3 +13,17 @@ export const updateApplicationStatus = async (
   })
   return response.json()
 }
+
+export const updateUserRole = async (
+  userId: string,
+  role: "seeker" | "recruiter" | "admin"
+) => {
+  const response = await fetch(`${BASE_URL}/users/${userId}/role`, {
+    method: "PATCH",
+    headers: {
+      "Content-type": "application/json",
+    },
+    body: JSON.stringify({ role }),
+  })
+  return response.json()
+}

@@ -20,9 +20,34 @@ export const auth = betterAuth({
         input: true,
         defaultValue: "seeker",
       },
+      // The admin plugin owns `role` and rejects it when it arrives from the
+      // sign-up form. The form sends the picked role as `requestedRole`
+      // instead, and the hook below copies it onto `role`.
+      requestedRole: {
+        type: ["seeker", "recruiter"],
+        input: true,
+        required: false,
+        returned: false,
+      },
     },
   },
-  plugins: [admin()],
+  databaseHooks: {
+    user: {
+      create: {
+        async before(user) {
+          if (
+            user.requestedRole === "seeker" ||
+            user.requestedRole === "recruiter"
+          ) {
+            return { data: { role: user.requestedRole } }
+          }
+        },
+      },
+    },
+  },
+  // New accounts are seekers unless they asked to join as a recruiter.
+  // (`defaultRole` must be one of the app's roles, not better-auth's "user".)
+  plugins: [admin({ defaultRole: "seeker" })],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,

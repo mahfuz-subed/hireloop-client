@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Eye, EyeOff, Lock, Mail, Shield, User, Users } from "lucide-react"
+import { Eye, EyeOff, ImagePlus, Lock, Mail, User, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { AuthFormData, AuthMode, UserRole } from "@/types/auth"
@@ -43,7 +43,6 @@ const ROLES: {
 }[] = [
   { value: "seeker", label: "Job Seeker", icon: Users },
   { value: "recruiter", label: "Recruiter", icon: User },
-  { value: "admin", label: "Admin", icon: Shield },
 ]
 
 const rolePillClass =
@@ -70,11 +69,59 @@ export function AuthForm({
     role: "seeker",
   })
   const [showPassword, setShowPassword] = React.useState(false)
+  const [imageFile, setImageFile] = React.useState<File | null>(null)
+  const [isUploading, setIsUploading] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
 
   const setField =
     (field: keyof AuthFormData) =>
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setValues((prev) => ({ ...prev, [field]: event.target.value }))
+
+  /**
+   * Runs when the user picks an image in the sign-up form.
+   *
+   * 1. Saves the file so the field can show its name.
+   * 2. Sends it to `/api/upload`, which uploads it to imgbb (the API key is a
+   *    server-only secret, so the browser must not call imgbb itself).
+   * 3. Stores the returned URL in the form values as `image`.
+   */
+  async function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+
+    setImageFile(file)
+    setUploadError(null)
+    setValues((prev) => ({ ...prev, image: undefined }))
+
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("image", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result?.error || "The image could not be uploaded.")
+      }
+
+      // Sign-up reads this value and sends it to better-auth as `image`.
+      setValues((prev) => ({ ...prev, image: result.url }))
+    } catch (error) {
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "The image could not be uploaded."
+      )
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -83,7 +130,9 @@ export function AuthForm({
     const data: AuthFormData = {
       email: values.email,
       password: values.password,
-      ...(isSignup ? { name: values.name, role: values.role } : {}),
+      ...(isSignup
+        ? { name: values.name, role: values.role, image: values.image }
+        : {}),
     }
     console.log(`${mode} form data:`, data)
     onSubmit?.(data)
@@ -162,6 +211,48 @@ export function AuthForm({
           </div>
         ) : null}
 
+        {copy.showName ? (
+          <div>
+            <label htmlFor="image" className={labelClass}>
+              Profile photo
+            </label>
+            <label
+              htmlFor="image"
+              className="flex h-12 w-full cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-[#1A1A1F] px-3 text-base tracking-[-0.0125rem] text-[#EDEDEF] shadow-[inset_0_3px_10px_rgba(255,255,255,0.04)] transition-colors focus-within:border-[#5C53FE]/60 focus-within:ring-2 focus-within:ring-[#5C53FE]/30 hover:border-white/25"
+            >
+              <ImagePlus
+                aria-hidden
+                className="size-5 shrink-0 text-white/50"
+              />
+              <span
+                className={cn(
+                  "truncate",
+                  imageFile ? "text-[#EDEDEF]" : "text-white/60"
+                )}
+              >
+                {isUploading
+                  ? "Uploading…"
+                  : imageFile
+                    ? imageFile.name
+                    : "Choose an image"}
+              </span>
+            </label>
+            <input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="sr-only"
+            />
+            {uploadError ? (
+              <p role="alert" className="mt-2 text-sm text-destructive">
+                {uploadError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         <div>
           <label htmlFor="email" className={labelClass}>
             Email address
@@ -234,7 +325,8 @@ export function AuthForm({
 
         <button
           type="submit"
-          className="mt-1 h-[52px] w-full rounded-[8px] bg-[#5C53FE] text-lg font-medium text-[#EDEDEF] shadow-[inset_0_3px_10px_rgba(255,255,255,0.2)] transition-colors hover:bg-[#7B74FF] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
+          disabled={isUploading}
+          className="mt-1 h-[52px] w-full rounded-[8px] bg-[#5C53FE] text-lg font-medium text-[#EDEDEF] shadow-[inset_0_3px_10px_rgba(255,255,255,0.2)] transition-colors hover:bg-[#7B74FF] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {copy.submitLabel}
         </button>
